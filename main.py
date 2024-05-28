@@ -13,3 +13,4 @@ if __name__ == '__main__':
     WebScrapperBot.set_month_range()
     WebScrapperBot.extract_website_data()
     WebScrapperBot.close_browser()
+    WebScrapperBot.print_and_log("info","Bot execution finished")

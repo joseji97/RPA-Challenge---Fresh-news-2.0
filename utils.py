@@ -118,15 +118,21 @@ class Utils:
 
 
     def select_topic(self):
-        try:
-            self.print_and_log("info", message=f"Clicking on topic '{self.TOPIC}'")
-            TOPIC_XPATH = f"//span[./text()='{self.TOPIC}']/../input"
-            self.browser_lib.wait_until_page_contains_element(locator=TOPIC_XPATH)
-            self.browser_lib.click_element(locator=TOPIC_XPATH)
-            sleep(self.DELAY)
-        except Exception as e:
-            self.print_and_log("error",str(e))
-            self.print_and_log("error","Topic not found")
+
+        if len(self.TOPIC) == 0:
+            return
+        for value in self.TOPIC:
+            try:
+                see_all_xpath = "//div[1]/ps-toggler/ps-toggler/button[@class='button see-all-button']"
+                self.browser_lib.click_element(locator=see_all_xpath)
+                self.print_and_log("info", message=f"Clicking on topic '{value}'")
+                TOPIC_XPATH = f"//span[./text()='{value}']/../input"
+                self.browser_lib.wait_until_page_contains_element(locator=TOPIC_XPATH)
+                self.browser_lib.click_element(locator=TOPIC_XPATH)
+                sleep(self.DELAY)
+            except Exception as e:
+                self.print_and_log("error",str(e))
+                self.print_and_log("error","Topic not found")
 
 
     def sort_newest_news(self):

@@ -40,7 +40,7 @@ Sample properties.json file
     {
         "URL": "https://www.latimes.com/",
         "SEARCH_PHRASE": "price",
-        "TOPIC": "Business",
+        "TOPIC": ["Business"],
         "NUMBER_OF_MONTHS": 1,
         "DELAY": 5
     }
