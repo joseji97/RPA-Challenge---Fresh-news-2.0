@@ -37,13 +37,13 @@ To use the program, set the following variables in the properties.json file and 
 
     ```
     
-{
-    "URL": "https://www.latimes.com/",
-    "SEARCH_PHRASE": "price",
-    "TOPIC": "Business",
-    "NUMBER_OF_MONTHS": 1,
-    "DELAY": 5
-}
+    {
+        "URL": "https://www.latimes.com/",
+        "SEARCH_PHRASE": "price",
+        "TOPIC": "Business",
+        "NUMBER_OF_MONTHS": 1,
+        "DELAY": 5
+    }
     ```
 
 Once you have set these variables, you can run the program using Python.
