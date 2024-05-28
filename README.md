@@ -28,14 +28,14 @@ To use this program, follow these steps:
 # How to use
 
 To use the program, set the following variables in the properties.json file and run the main.py file:
-
+    
     URL: The URL for the L.A. Times website
     SEARCH_PHRASE: The search phrase for the articles you want to retrieve
     CATEGORY: The category of the articles you want to retrieve
     NUMBER_OF_MONTHS: The number of months in the past to search for articles
     DELAY: Time to wait between certain procedures
 
-    ```
+Sample properties.json file
     
     {
         "URL": "https://www.latimes.com/",
@@ -44,6 +44,5 @@ To use the program, set the following variables in the properties.json file and 
         "NUMBER_OF_MONTHS": 1,
         "DELAY": 5
     }
-    ```
 
 Once you have set these variables, you can run the program using Python.
