@@ -36,6 +36,7 @@ To use the program, set the following variables in the properties.json file and 
     DELAY: Time to wait between certain procedures
 
     ```
+    
 {
     "URL": "https://www.latimes.com/",
     "SEARCH_PHRASE": "price",
