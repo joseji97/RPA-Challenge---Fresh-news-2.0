@@ -44,7 +44,6 @@ class Utils:
             self.URL = self.properties.get("URL")
             self.SEARCH_PHRASE = self.properties.get("SEARCH_PHRASE")
             self.TOPIC = self.properties.get("TOPIC")
-            self.LIST_OPTION = self.properties.get("LIST_OPTION")
             self.NUMBER_OF_MONTHS = self.properties.get("NUMBER_OF_MONTHS")
             self.DELAY = self.properties.get("DELAY")
         
@@ -133,9 +132,10 @@ class Utils:
     def sort_newest_news(self):
         try:
             SORT_DROPDOWN_BUTTON = "//select[@class='select-input']"
-            self.print_and_log("info", message=f"Sorting news by '{self.LIST_OPTION}'")
+            LIST_OPTION = "Newest"
+            self.print_and_log("info", message=f"Sorting news by '{LIST_OPTION}'")
             self.browser_lib.wait_until_page_contains_element(locator=SORT_DROPDOWN_BUTTON)
-            LIST_OPTION_XPATH = f"{SORT_DROPDOWN_BUTTON}/option[text()='{self.LIST_OPTION}']"
+            LIST_OPTION_XPATH = f"{SORT_DROPDOWN_BUTTON}/option[text()='{LIST_OPTION}']"
             LIST_VALUE=self.browser_lib.get_element_attribute(LIST_OPTION_XPATH,"value")
             self.browser_lib.select_from_list_by_value(SORT_DROPDOWN_BUTTON, LIST_VALUE)
             sleep(self.DELAY)
@@ -202,7 +202,7 @@ class Utils:
                 self.go_to_next_page()
 
         #self.print_and_log("info",extracted_data)
-        self.write_csv_data(extracted_data)
+        self.write_excel_file(extracted_data)
 
 
     def set_month_range(self):
@@ -234,7 +234,7 @@ class Utils:
         return date_str
 
 
-    def write_csv_data(self, data):
+    def write_excel_file(self, data):
         lib = Files()
         lib.create_workbook()
         lib.append_rows_to_worksheet(data)
