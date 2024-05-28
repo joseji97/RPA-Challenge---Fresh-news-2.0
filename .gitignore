@@ -18,3 +18,5 @@ temp/
 testrun/*
 .~lock*
 *.pkl
+*.xlsx
+*.xls

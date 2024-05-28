@@ -16,7 +16,8 @@ class Utils:
     PARAMETERS_FILENAME = f"{CURRENT_DIRECTORY}/properties.json"
     LOG_FOLDER = f"{CURRENT_DIRECTORY}/Log"
     IMAGES_FOLDER = f"{CURRENT_DIRECTORY}/Images"
-    TODAY_STR_LOG = datetime.now().strftime("%m%d%Y")
+    TODAY = datetime.now()
+    TODAY_STR = TODAY.strftime("%m%d%Y")
     LOG_FORMAT = "%(levelname)s %(asctime)s - %(message)s"
     logging.config.dictConfig({
                                 "version": 1,
@@ -25,16 +26,19 @@ class Utils:
 
 
     def __init__(self):
+
         self._check_folder_exists(self.LOG_FOLDER)   
         self._check_folder_exists(self.IMAGES_FOLDER)  
-        self.LOG_NAME = f"Log/LATIMES_{self.TODAY_STR_LOG}.log"
+        self.LOG_NAME = f"Log/LATIMES_{self.TODAY_STR}.log"
         logging.basicConfig(filename=self.LOG_NAME,
                         level = logging.DEBUG,
                         format = self.LOG_FORMAT,
                         filemode = "a+")
         self.logger = logging.getLogger(__name__)
+
         self.print_and_log("info", message="###"*30)
         self.print_and_log("info", message="BOT started")
+
         try:
             self.properties = self.import_data()
             self.URL = self.properties.get("URL")
@@ -92,7 +96,6 @@ class Utils:
         except Exception as e:
             self.print_and_log("error",str(e))
             self.print_and_log("error","Error opening browser")
-            return {}
 
 
     def begin_search(self):
@@ -113,7 +116,6 @@ class Utils:
         except Exception as e:
             self.print_and_log("error",str(e))
             self.print_and_log("error","Error on execution of begin_search")
-            return {}
 
 
     def select_topic(self):
@@ -126,7 +128,6 @@ class Utils:
         except Exception as e:
             self.print_and_log("error",str(e))
             self.print_and_log("error","Topic not found")
-            return {}
 
 
     def sort_newest_news(self):
@@ -141,7 +142,6 @@ class Utils:
         except Exception as e:
             self.print_and_log("error",str(e))
             self.print_and_log("error","Error sorting news")
-            return {}
 
 
     def go_to_next_page(self):
@@ -150,56 +150,50 @@ class Utils:
             NEXT_PAGE_BUTTON = "//div[@class='search-results-module-next-page']/a"
             self.browser_lib.wait_until_page_contains_element(locator=NEXT_PAGE_BUTTON)
             NEXT_PAGE_LINK = self.browser_lib.get_element_attribute(NEXT_PAGE_BUTTON,"href")
-            self.print_and_log("info",NEXT_PAGE_LINK)
             self.browser_lib.click_link(NEXT_PAGE_LINK)
             sleep(self.DELAY)
         except Exception as e:
             self.print_and_log("error",str(e))
             self.print_and_log("error","Error going to next page")
-            return {}
 
 
     def extract_website_data(self):
+        self.print_and_log("info",message="Extracting data from website")
         flag = True
         self.set_month_range()
-        extracted_data = []
+        extracted_data = [['DATE','TITLE','DESCRIPTION','IMAGE NAME','COUNT OF SEARCH PHRASES','TITLE CONTAINS AMOUNT OF MONEY','DESCRIPTION CONTAINS AMOUNT OF MONEY']]
 
         while(flag==True):
             element_list = "//ul[@class='search-results-module-results-menu']/li"
             news_list_elements = self.browser_lib.get_webelements(element_list)
-            print("###############")
-            print(extracted_data)
+
             for value in range(0, len(news_list_elements)):
                 timestamp_str = news_list_elements[value].find_element(By.CLASS_NAME, "promo-timestamp").get_attribute("data-timestamp")
                 date = self.convert_timestamp_to_datetime(timestamp_str)
                 title = news_list_elements[value].find_element(By.CLASS_NAME, "promo-title").text
                 description = news_list_elements[value].find_element(By.CLASS_NAME, "promo-description").text
                 image_link = news_list_elements[value].find_element(By.CLASS_NAME, "image").get_attribute("src")
-                #image = self.download_image_from_url(
-                #    self.get_image_value(f"{element_list}[{value}]//img")
-                #)
+                image = self.download_image_from_url(image_link)
 
-            #    is_title_dolar = self.check_for_dolar_sign(title)
-            #    is_description_dolar = self.check_for_dolar_sign(description)
-            #    phrases_count = self.check_phrases(text_pattern=self.SEARCH_PHRASE, text=title)
+                is_title_dolar = self.check_for_dolar_sign(title)
+                is_description_dolar = self.check_for_dolar_sign(description)
+                phrases_count = self.check_phrases(text_pattern=self.SEARCH_PHRASE, text=title)
 
                 flag = self.date_comparison(date)
-                print(date,flag)
                 if flag == True:
                     extracted_data.append(
                         [
                             date,
                             title,
                             description,
-                            image_link
-                #            image,
-                #            is_title_dolar,
-                #            is_description_dolar,
-                #            self.check_phrases(
-                #                text_pattern=self.SEARCH_PHRASE,
-                #                text=description,
-                #                count=phrases_count,
-                #            ),
+                            image,
+                            self.check_phrases(
+                                text_pattern=self.SEARCH_PHRASE,
+                                text=description,
+                                count=phrases_count,
+                            ),
+                            is_title_dolar,
+                            is_description_dolar,
                         ]
                     )
                 else:
@@ -207,52 +201,57 @@ class Utils:
             if flag == True:
                 self.go_to_next_page()
 
-        self.print_and_log("info",message=extracted_data)
-        #self.write_csv_data(extracted_data)
+        #self.print_and_log("info",extracted_data)
+        self.write_csv_data(extracted_data)
 
 
-    def set_month_range(self) -> None:
-        today = date.today()
-        self.end = today.strftime("%m/%d/%Y")
-        self.start = (
-            (today - timedelta(days=30 * self.NUMBER_OF_MONTHS ))
-            .strftime("%m/%d/%Y")
-        )
+    def set_month_range(self):
+        self.end = self.TODAY.strftime("%m/%d/%Y")
 
-    def date_comparison(self,current_date: str) -> bool:
+        if self.NUMBER_OF_MONTHS < 2:
+            self.start = self.TODAY.replace(day=1).strftime("%m/%d/%Y")
+        else:
+            self.start = (
+                (self.TODAY - datetime.timedelta(days=30 * (self.NUMBER_OF_MONTHS - 1)))
+                .replace(day=1)
+                .strftime("%m/%d/%Y")
+            )
+
+    def date_comparison(self,current_date):
         format = "%m/%d/%Y"
         start_datetime = datetime.strptime(self.start, format)
         current_date_datetime = datetime.strptime(current_date, format)
+
         if current_date_datetime >= start_datetime:
             return True
         else:
             return False
 
-    def convert_timestamp_to_datetime(self, timestamp_str: str) -> str:
+    def convert_timestamp_to_datetime(self, timestamp_str):
         timestamp_float_in_miliseconds = float(timestamp_str)
         timestamp_float_in_seconds = timestamp_float_in_miliseconds / 1000
         date_str = datetime.fromtimestamp(timestamp_float_in_seconds).strftime("%m/%d/%Y")
         return date_str
 
 
-    def write_csv_data(self, data: list):
+    def write_csv_data(self, data):
         lib = Files()
         lib.create_workbook()
         lib.append_rows_to_worksheet(data)
         lib.save_workbook("result.xlsx")
 
 
-    def download_image_from_url(self, image_url: str):
+    def download_image_from_url(self, image_url):
         image_name = str(uuid.uuid4())
         if image_url == "":
             return ""
-        img_data = requests.get(self, image_url).content
+        img_data = requests.get(image_url).content
         with open(f"./images/{image_name}.jpg", "wb") as handler:
             handler.write(img_data)
         return image_name
 
 
-    def check_phrases(self, text_pattern: str, text: str, count=0):
+    def check_phrases(self, text_pattern, text, count=0):
         c = count
         words = text.split()
         for word in words:
@@ -261,7 +260,7 @@ class Utils:
         return c
 
 
-    def check_for_dolar_sign(self, text: str):
+    def check_for_dolar_sign(self, text):
         pattern = re.compile(
             "((\$\s*\d{1,}.\d{0,}.\d{0,})|(\d{1,}\s*(dollars|usd|dollar)))", re.IGNORECASE
         )
@@ -269,15 +268,6 @@ class Utils:
         if re.search(pattern, text):
             return True
         return False
-
-
-    def split_extracted_text(self, text: list):
-        try:
-            date, title, description, *r_date = text
-
-            return date, title, description
-        except:
-            return "", "", ""
 
 
     def get_all_files_from_folder(self, path="./images/*.jpg"):
